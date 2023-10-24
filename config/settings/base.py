@@ -1,9 +1,12 @@
 from os import getenv
 from pathlib import Path
 
+from dotenv import load_dotenv
 from rest_framework.reverse import reverse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv()
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-_)noqum!!s^eg1*34ysh1+hm#tw^#rafz&p&fvl6n_-#c$n^j9'
@@ -60,7 +63,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'USER': getenv('POSTGRES_USER'),
+        'USER': getenv('POSTGRES_USERNAME'),
         'PASSWORD': getenv('POSTGRES_PASSWORD'),
         'HOST': getenv('POSTGRES_HOST'),
         'PORT': getenv('POSTGRES_PORT'),
