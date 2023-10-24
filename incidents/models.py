@@ -3,7 +3,7 @@ from django.db import models
 
 class Incident(models.Model):
     longitude = models.FloatField()
-    latitude = models.FloatField
+    latitude = models.FloatField()
     address = models.CharField(max_length=254)
     category = models.ForeignKey("Category", on_delete=models.PROTECT, related_name="incidents")
     is_predictive = models.BooleanField(default=False)
