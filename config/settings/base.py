@@ -1,12 +1,15 @@
 from os import getenv
 from pathlib import Path
 
+from rest_framework.reverse import reverse
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-_)noqum!!s^eg1*34ysh1+hm#tw^#rafz&p&fvl6n_-#c$n^j9'
 
 AUTH_USER_MODEL = 'users.User'
+AUTHENTICATION_BACKENDS = ['users.backend.EmailBackend']
 
 # Application definition
 INSTALLED_APPS = [
@@ -17,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'drf_yasg',
+    'rest_framework.apps.RestFrameworkConfig',
 
     'users.apps.UsersConfig',
     'incidents.apps.IncidentsConfig'
@@ -78,3 +82,9 @@ MEDIA_ROOT = BASE_DIR / 'media/'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Swagger
+SWAGGER_SETTINGS = {
+    'LOGIN_URL': '/api/user/login/',
+    'LOGOUT_URL': '/api/user/logout/'
+}
