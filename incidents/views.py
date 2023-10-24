@@ -1,3 +1,8 @@
 from django.shortcuts import render
+from rest_framework import routers
+from rest_framework.views import APIView
 
-# Create your views here.
+
+class AllIncidentsAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        pass
