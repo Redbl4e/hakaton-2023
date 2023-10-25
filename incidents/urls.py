@@ -7,5 +7,7 @@ app_name = 'incidents'
 
 urlpatterns = [
     path("get/all/incidents/", AllIncidentsAPIView.as_view(),
+         name="all_incidents"),
+    path("put/deactivate/incedents", AllIncidentsAPIView.as_view(),
          name="all_incidents")
 ]
