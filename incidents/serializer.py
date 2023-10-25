@@ -21,3 +21,18 @@ class ReadGetIncidentDataSerializer(serializers.Serializer):
     is_active = serializers.BooleanField()
     category = Category(read_only=True)
     created_at = serializers.DateTimeField()
+
+
+class InputPutDeactivateIncident(serializers.Serializer):
+    incident_id = serializers.IntegerField()
+
+
+class InputGetIncidentDeatail(serializers.Serializer):
+    incident_id = serializers.IntegerField()
+
+
+class ReadGetIncidentDeatail(serializers.Serializer):
+    user_id = serializers.IntegerField()
+    title = serializers.CharField()
+    media_path = serializers.CharField()
+    created_at = serializers.DateTimeField()

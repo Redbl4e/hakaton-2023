@@ -1,13 +1,15 @@
 from django.contrib import admin
 from django.urls import path, include
 
-from incidents.views import AllIncidentsAPIView
+from incidents.views import AllIncidentsAPIView, DeactivateIncidentAPIView, IncedentsDetailAPIView
 
 app_name = 'incidents'
 
 urlpatterns = [
-    path("get/all/incidents/", AllIncidentsAPIView.as_view(),
+    path("get/all/incidents/by/radius", AllIncidentsAPIView.as_view(),
          name="all_incidents"),
-    path("put/deactivate/incedents", AllIncidentsAPIView.as_view(),
-         name="all_incidents")
+    path("put/deactivate/incedents", DeactivateIncidentAPIView.as_view(),
+         name="deactivate_incidents"),
+    path("get/incedents/detail", IncedentsDetailAPIView.as_view(),
+         name="detail_incidents")
 ]
