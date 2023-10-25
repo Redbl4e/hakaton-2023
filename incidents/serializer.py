@@ -23,6 +23,22 @@ class ReadGetIncidentDataSerializer(serializers.Serializer):
     created_at = serializers.DateTimeField()
 
 
+class InputPostIncidentDataSerializer(serializers.Serializer):
+    longitude = serializers.FloatField()
+    latitude = serializers.FloatField()
+    address = serializers.CharField()
+    category = Category(read_only=True)
+
+
+class OutputPostIncidentDataSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    longitude = serializers.FloatField()
+    latitude = serializers.FloatField()
+    address = serializers.CharField()
+    category_id = Category(read_only=True)
+    created_at = serializers.DateTimeField()
+
+
 class InputPutDeactivateIncident(serializers.Serializer):
     incident_id = serializers.IntegerField()
 
