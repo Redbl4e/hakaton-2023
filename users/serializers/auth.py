@@ -1,9 +1,14 @@
 from django.contrib.auth import authenticate
+from django.contrib.auth.backends import UserModel
+from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
+
+from exceptions import ValidationError
 
 
-class LoginSerializer(serializers.Serializer):
+class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(
         label='Email', write_only=True
     )
@@ -28,3 +33,67 @@ class LoginSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class UserRegisterSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        label='Email'
+    )
+    password1 = serializers.CharField(label='Пароль')
+    password2 = serializers.CharField(label='Подтверждение пароля')
+
+    def validate(self, attrs):
+        password1 = attrs.get('password1')
+        password2 = attrs.get('password2')
+
+        if password1 != password2:
+            raise ValidationError('Пароли должны совпадать', code='authorization')
+
+        try:
+            validate_password(password1)
+        except DjangoValidationError as e:
+            raise ValidationError(e.messages)
+
+    def validate_email(self, value):
+        if UserModel.objects.filter(email=value).exists():
+            raise ValidationError('Данный email уже занят', code='authorization')
+        return value
+
+    def validate_username(self, value):
+        if UserModel.objects.filter(username=value).exists():
+            raise ValidationError('Данное имя пользователя уже занято', code='authorization')
+
+    class Meta:
+        model = UserModel
+        fields = ['first_name', 'last_name', 'patronymic', 'username', 'email', 'password1', 'password2']
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField(label='Старый пароль')
+    new_password1 = serializers.CharField(label='Новый пароль')
+    new_password2 = serializers.CharField(label='Подтверждение пароля')
+
+    def validate(self, attrs):
+        if attrs['new_password1'] != attrs['new_password2']:
+            raise ValidationError('Пароли не совпадают')
+
+        try:
+            validate_password(attrs['new_password1'])
+        except DjangoValidationError as e:
+            raise ValidationError(e.messages)
+
+        return attrs
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+
+        if not check_password(value, user.password):
+            raise ValidationError('Указан не верный старый пароль', code='old_password')
+        return value
+
+    def update(self, user, validated_data):
+        user.password = make_password(validated_data['new_password1'])
+        user.save()
+
+    class Meta:
+        fields = ['old_password', 'new_password1', 'new_password2']
