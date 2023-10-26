@@ -1,23 +1,17 @@
-from datetime import datetime
-
-from django.contrib.auth.decorators import login_required
-from drf_yasg.openapi import Parameter, IN_QUERY, TYPE_NUMBER, TYPE_INTEGER, FORMAT_INT32, TYPE_STRING
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.generics import GenericAPIView, CreateAPIView
+from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from docs.incidents.params import latitude_param, radius_param, longitude_param, incident_id
+from docs.incidents.params import latitude_param, radius_param, longitude_param
 from docs.incidents.schemas import incident_schema, detail_incident_schema
 from docs.schemas import error_schema
 from exceptions import ValidationError
-from incidents.filters import IncidentDetailFilter
-from incidents.serializer import IncidentSerializer, IncidentCreateSerializer, IncidentDetailSerializer
-
-from incidents.models import Incident, Category, PostIncident
+from incidents.models import Incident
+from incidents.serializers import IncidentSerializer, IncidentCreateSerializer, IncidentPostSerializer
 
 
 class IncidentAPIView(GenericAPIView):
@@ -71,6 +65,13 @@ class IncidentAPIView(GenericAPIView):
         incidents = Incident.objects.raw(query)
         return incidents
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['fields'] = [
+            'id', 'longitude', 'latitude', 'address', 'is_predictive', 'is_active', 'created_at', 'category'
+        ]
+        return context
+
 
 class DeactivateIncidentAPIView(GenericAPIView):
     queryset = Incident.objects.all()
@@ -79,7 +80,7 @@ class DeactivateIncidentAPIView(GenericAPIView):
     permission_classes = [IsAdminUser]
 
     @swagger_auto_schema(
-        tags=['Incidents'], operation_summary='Отключить инцедент', responses={
+        tags=['Incident'], operation_summary='Отключить инцидент', responses={
             status.HTTP_201_CREATED: incident_schema,
             status.HTTP_400_BAD_REQUEST: error_schema
         }, )
@@ -92,53 +93,39 @@ class DeactivateIncidentAPIView(GenericAPIView):
 
 
 class IncidentDetailAPIView(GenericAPIView):
-    queryset = PostIncident.objects.all()
-    serializer_class = IncidentDetailSerializer
-    filter_backends = [IncidentDetailFilter]
+    serializer_class = IncidentSerializer
+    lookup_url_kwarg = 'pk'
 
     @swagger_auto_schema(
-        tags=['Incidents'], operation_summary='Детали инцидента', responses={
+        tags=['Incident'], operation_summary='Детали инцидента', responses={
             status.HTTP_200_OK: detail_incident_schema,
             status.HTTP_400_BAD_REQUEST: error_schema
-        },
-        manual_parameters=[
-            incident_id
-        ]
+        }
     )
     def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        serializer = self.get_serializer(queryset, many=True)
+        incident = self.get_object()
+        serializer = self.get_serializer(incident)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def get_queryset(self):
+        return Incident.objects.prefetch_related('posts')
 
-class CreateIncidentAPIView(APIView):
-    @swagger_auto_schema(tags=['Incidents'],
-                         operation_summary='create incident',
-                         responses={
-                         },
-                         manual_parameters=[
-                             Parameter('longitude', in_=IN_QUERY,
-                                       type=TYPE_NUMBER, required=True),
-                             Parameter('latitude', in_=IN_QUERY,
-                                       type=TYPE_NUMBER, required=True),
-                             Parameter('address', in_=IN_QUERY,
-                                       type=TYPE_STRING, required=True),
-                             Parameter('category_id', in_=IN_QUERY,
-                                       type=TYPE_INTEGER, required=True)
-                         ]
-                         )
-    def post(self, request, *args, **kwargs):
-        if request.method == "POST":
-            serializer = InputPostIncidentDataSerializer(data=request.query_params)
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['fields'] = ['id', 'posts']
+        return context
 
-            if serializer.is_valid():
-                longitude = serializer.validated_data['longitude']
-                latitude = serializer.validated_data['latitude']
-                address = serializer.validated_data['address']
-                incident = Incident(longitude=longitude, latitude=latitude, address=address, created_at=datetime)
-                incident.save()
 
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'message': 'Метод не поддерживается'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+class CreateIncidentPostAPIView(CreateAPIView):
+    queryset = Incident.objects.all()
+    serializer_class = IncidentPostSerializer
+    parser_classes = [MultiPartParser]
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        tags=['Incident'], operation_summary='Добавить пост к инциденту', responses={
+            status.HTTP_400_BAD_REQUEST: error_schema
+        }
+    )
+    def post(self, request: Request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
