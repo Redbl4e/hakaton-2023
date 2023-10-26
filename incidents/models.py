@@ -1,5 +1,5 @@
 from django.db import models
-
+from users.models import User
 
 class Incident(models.Model):
     longitude = models.FloatField()
@@ -17,3 +17,12 @@ class Incident(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=254)
+
+
+class PostIncident(models.Model):
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="incidents")
+    title = models.CharField(max_length=254)
+    media_path = models.CharField()
+    incident = models.ForeignKey("Incident", on_delete=models.PROTECT, related_name="incidents")
+    created_at = models.DateTimeField(auto_now_add=True)
+
