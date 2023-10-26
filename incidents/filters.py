@@ -23,11 +23,28 @@ class RadiusFilter(BaseFilterBackend):
 
         longitude, latitude = self.get_search_fields(view)
 
-        query = f'''SELECT * FROM incidents_incident as i
-               LEFT JOIN incidents_category AS c
-               ON i.category_id = c.id
-               WHERE (ST_DistanceSphere(
-                 ST_MakePoint(i.longitude, i.latitude),
-                 ST_MakePoint({longitude}, {latitude})
-               ) <= {radius}) AND (i.is_active = True OR i.is_predictive = True);'''
-        filtered_queryset = queryset.filter()
+        # query = f'''SELECT * FROM incidents_incident as i
+        #        LEFT JOIN incidents_category AS c
+        #        ON i.category_id = c.id
+        #        WHERE (ST_DistanceSphere(
+        #          ST_MakePoint(i.longitude, i.latitude),
+        #          ST_MakePoint({longitude}, {latitude})
+        #        ) <= {radius}) AND (i.is_active = True OR i.is_predictive = True);'''
+        # filtered_queryset = queryset.filter()
+
+
+class IncidentDetailFilter(BaseFilterBackend):
+    def get_search_terms(self, request: Request, view) -> int:
+        incedent_id = request.query_params.get('incident_id')
+        return incedent_id
+
+    def get_search_fields(self, view) -> int:
+        return getattr(view, 'search_fields')
+
+    def filter_queryset(self, request: Request, queryset: QuerySet, view):
+        incident_id = self.get_search_terms(request, view)
+        if incident_id is None:
+            raise ValidationError('Поле обязательные')
+
+        filtered_queryset = queryset.filter(incident_id=incident_id)
+        return filtered_queryset

@@ -21,3 +21,12 @@ incident_schema = OpenAPISchema(
         'created_at': datetime_schema
     }
 )
+
+detail_incident_schema = OpenAPISchema(
+    title='Detail', type_=openapi.TYPE_OBJECT, properties={
+        'user_id': int32_schema,
+        'title': string_schema,
+        'media_path': string_schema,
+        'created_at': datetime_schema
+    })
+

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from incidents.models import Incident, Category
+from incidents.models import Incident, Category, PostIncident
 
 
 class CategorySerializer(serializers.Serializer):
@@ -10,6 +10,11 @@ class CategorySerializer(serializers.Serializer):
 
 class IncidentSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
+
+    def deactivate(self, instance: Incident) -> Incident:
+        instance.is_active = False
+        instance.save()
+        return instance
 
     class Meta:
         model = Incident
@@ -22,3 +27,9 @@ class IncidentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Incident
         fields = ['latitude', 'longitude', 'address', 'category']
+
+
+class IncidentDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostIncident
+        fields = ['id', 'title', 'media_path', 'created_at', 'user_id']

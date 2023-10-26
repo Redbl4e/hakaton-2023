@@ -22,8 +22,12 @@ class Category(models.Model):
 
 
 class PostIncident(models.Model):
+
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name="incidents")
     title = models.CharField(max_length=254)
     media_path = models.CharField()
     incident = models.ForeignKey("Incident", on_delete=models.PROTECT, related_name="incidents")
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "incidents_post_incident"
