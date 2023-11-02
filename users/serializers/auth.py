@@ -4,8 +4,10 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+from fcm_django.models import FCMDevice
 
 from exceptions import ValidationError
+from users.models import User, Coordinate
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -35,16 +37,34 @@ class UserLoginSerializer(serializers.Serializer):
         return attrs
 
 
+class FCMDeviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Coordinate
+        fields = ('name', 'device_id', 'device_id',
+                  'registration_id', 'type')
+
+
 class UserRegisterSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         label='Email'
     )
     password1 = serializers.CharField(label='Пароль')
     password2 = serializers.CharField(label='Подтверждение пароля')
+    device_data = FCMDeviceSerializer(label="Токен")
+
+    def create(self, validated_data):
+        password = validated_data.pop('password1')
+        token_data = validated_data.pop('device_data')
+        user = User.objects.create(**validated_data)
+        user.set_password(password)
+        user.save()
+        Сoordinate.objects.create(**token_data, user_id=user.id)
+
+        return user
 
     def validate(self, attrs):
         password1 = attrs.get('password1')
-        password2 = attrs.get('password2')
+        password2 = attrs.pop('password2')
 
         if password1 != password2:
             raise ValidationError('Пароли должны совпадать', code='authorization')
@@ -53,6 +73,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             validate_password(password1)
         except DjangoValidationError as e:
             raise ValidationError(e.messages)
+        return attrs
 
     def validate_email(self, value):
         if UserModel.objects.filter(email=value).exists():
@@ -62,10 +83,12 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         if UserModel.objects.filter(username=value).exists():
             raise ValidationError('Данное имя пользователя уже занято', code='authorization')
+        return value
 
     class Meta:
         model = UserModel
-        fields = ['first_name', 'last_name', 'patronymic', 'username', 'email', 'password1', 'password2']
+        fields = ['first_name', 'last_name', 'patronymic', 'username', 'email', 'password1', 'password2',
+                  'device_data']
 
 
 class PasswordChangeSerializer(serializers.Serializer):

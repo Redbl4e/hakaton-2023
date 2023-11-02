@@ -1,17 +1,19 @@
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.generics import GenericAPIView, CreateAPIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from docs.incidents.params import latitude_param, radius_param, longitude_param
+from docs.incidents.params import latitude_param, radius_param, longitude_param, category_param
 from docs.incidents.schemas import incident_schema, detail_incident_schema
 from docs.schemas import error_schema
 from exceptions import ValidationError
+from incidents.filters import IncidentDetailFilter, HistoryFilter
 from incidents.models import Incident
 from incidents.serializers import IncidentSerializer, IncidentCreateSerializer, IncidentPostSerializer
+from incidents.utils import send_push_notification_to_users
 
 
 class IncidentAPIView(GenericAPIView):
@@ -26,7 +28,6 @@ class IncidentAPIView(GenericAPIView):
     def get(self, request: Request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
-
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -39,6 +40,7 @@ class IncidentAPIView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         incident = serializer.save()
+        send_push_notification_to_users(incident)
         response_serializer = IncidentSerializer(incident)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
@@ -129,3 +131,32 @@ class CreateIncidentPostAPIView(CreateAPIView):
     )
     def post(self, request: Request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+
+class HistoryIncidentAPIView(generics.ListAPIView):
+    queryset = Incident.objects.all()
+    serializer_class = IncidentSerializer
+    filter_backends = [HistoryFilter]
+    lookup_url_kwarg = 'pk'
+
+    @swagger_auto_schema(
+        tags=['Incident'], operation_summary='Получить историю инцедентов',
+        manual_parameters=[longitude_param, latitude_param,
+                           category_param],
+        responses={
+            status.HTTP_400_BAD_REQUEST: error_schema
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_queryset(self):
+        return Incident.objects.all().exclude(id=self.kwargs.get('pk'))
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['fields'] = ['id', 'latitude', 'longitude',
+                             'address', 'category', 'created_at']
+        return context

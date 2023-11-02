@@ -2,6 +2,7 @@ from os import getenv
 from pathlib import Path
 
 from dotenv import load_dotenv
+from firebase_admin import initialize_app
 from rest_framework.reverse import reverse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,9 +25,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'drf_yasg',
     'rest_framework.apps.RestFrameworkConfig',
-
+    'fcm_django',
+    'channels',
+    'coordinat.apps.CoordinatConfig',
     'users.apps.UsersConfig',
-    'incidents.apps.IncidentsConfig'
+    'incidents.apps.IncidentsConfig',
 ]
 
 MIDDLEWARE = [
@@ -91,3 +94,12 @@ SWAGGER_SETTINGS = {
     'LOGIN_URL': '/api/user/login/',
     'LOGOUT_URL': '/api/user/logout/'
 }
+
+FIREBASE_APP = initialize_app()
+
+FCM_DJANGO_SETTINGS = {
+    "APP_VERBOSE_NAME": "My FCM Project",
+    "FCM_SERVER_KEY": "your_fcm_server_key_here",
+}
+
+ASGI_APPLICATION = "config.asgi.application"

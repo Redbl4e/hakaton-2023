@@ -5,3 +5,6 @@ latitude_param = openapi.Parameter('latitude', in_=openapi.IN_QUERY, type=openap
 radius_param = openapi.Parameter('radius', in_=openapi.IN_QUERY, type=openapi.TYPE_NUMBER)
 
 incident_id = openapi.Parameter('incident_id', in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER)
+
+category_param = openapi.Parameter('category', in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER)
+

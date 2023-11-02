@@ -41,5 +41,9 @@ class Migration(migrations.Migration):
             managers=[
                 ('objects', django.contrib.auth.models.UserManager()),
             ],
+
         ),
+        # migrations.AlterModelOptions(
+        #     name='customfcmdevice',
+        #     options={'indexes': [('registration_id', 'user')]}),
     ]

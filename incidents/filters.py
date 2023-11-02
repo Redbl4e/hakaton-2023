@@ -48,3 +48,24 @@ class IncidentDetailFilter(BaseFilterBackend):
 
         filtered_queryset = queryset.filter(incident_id=incident_id)
         return filtered_queryset
+
+
+class HistoryFilter(BaseFilterBackend):
+    def get_search_terms(self, request: Request, view) -> tuple:
+        longitude = request.query_params.get('longitude')
+        latitude = request.query_params.get('latitude')
+        category = request.query_params.get('category')
+        return longitude, latitude, category,
+
+    def get_search_fields(self, view) -> int:
+        return getattr(view, 'search_fields')
+
+    def filter_queryset(self, request: Request, queryset: QuerySet, view):
+        longitude, latitude, category = self.get_search_terms(request, view)
+        if not all((longitude, latitude, category)):
+            raise ValidationError('Поля обязательные')
+        filtered_queryset = queryset.filter(
+            longitude=longitude, latitude=latitude,
+            category=category)
+
+        return filtered_queryset

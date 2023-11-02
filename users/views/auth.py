@@ -1,8 +1,8 @@
 from django.contrib.auth import login, logout
-from django.contrib.auth.backends import UserModel
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import GenericAPIView, CreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 
 from docs.schemas import error_schema
 from docs.users.schemas import user_schema
+from users.models import User
 from users.serializers.auth import UserLoginSerializer, UserRegisterSerializer, PasswordChangeSerializer
 from users.serializers.profile import UserSerializer
 
@@ -48,7 +49,6 @@ class LogoutAPIView(APIView):
 
 
 class RegisterAPIView(GenericAPIView):
-    queryset = UserModel.objects.all()
     serializer_class = UserRegisterSerializer
 
     @swagger_auto_schema(tags=['Auth'], operation_summary='Регистрация', responses={
@@ -58,8 +58,8 @@ class RegisterAPIView(GenericAPIView):
     def post(self, request: Request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        user_data = UserSerializer(user)
+        user = serializer.create(serializer.validated_data)
+        user_data = UserSerializer(user).data
         return Response(user_data, status=status.HTTP_201_CREATED)
 
 
