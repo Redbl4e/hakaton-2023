@@ -2,19 +2,20 @@ from datetime import datetime
 
 from ai.data_preparation import prepare_data
 from ai.model import training_model_and_predict_incidents_ai
-from incidents.models import Incident, PostIncident
+from incidents.models import Incident, PostIncident, Category
 
 
 def getting_data_from_db():
     massiv_with_incidents = []
 
-    query = Incident.objects.filter(is_predictive=False).order_by("created_at")
+    query = Incident.objects.filter(is_predictive=False).order_by("created_at").\
+        prefetch_related("Category")
     for row in query:
         massiv_with_incidents.append([float(row.longitude),
                                       float(row.latitude),
                                       str(row.address),
                                       str(row.created_at),
-                                      str(row.category)
+                                      str(row.category.name)
                                       ])
 
     return massiv_with_incidents
@@ -23,10 +24,11 @@ def getting_data_from_db():
 def writing(incident_info: list[float, float, str, str, str], prediction_percent: float):
     longitude, latitude, address, date_, category = incident_info
     date_ = datetime.strptime(date_, "%Y-%m-%d %H:%M:%S")
+    category_id = Category.objects.get(name=str(category)).id
     incident = Incident.objects.create(
         longitude=longitude,
         latitude=latitude,
-        category=category,
+        category=category_id,
         address=address,
         is_predictive=True,
         is_active=False,
