@@ -8,3 +8,4 @@ incident_id = openapi.Parameter('incident_id', in_=openapi.IN_QUERY, type=openap
 
 category_param = openapi.Parameter('category', in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER)
 
+user_id = openapi.Parameter('user_id', in_=openapi.IN_QUERY, type=openapi.TYPE_INTEGER)

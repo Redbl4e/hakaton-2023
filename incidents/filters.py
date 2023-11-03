@@ -54,18 +54,33 @@ class HistoryFilter(BaseFilterBackend):
     def get_search_terms(self, request: Request, view) -> tuple:
         longitude = request.query_params.get('longitude')
         latitude = request.query_params.get('latitude')
-        category = request.query_params.get('category')
-        return longitude, latitude, category,
+        return longitude, latitude
 
     def get_search_fields(self, view) -> int:
         return getattr(view, 'search_fields')
 
     def filter_queryset(self, request: Request, queryset: QuerySet, view):
-        longitude, latitude, category = self.get_search_terms(request, view)
-        if not all((longitude, latitude, category)):
+        longitude, latitude = self.get_search_terms(request, view)
+        if not all((longitude, latitude)):
             raise ValidationError('Поля обязательные')
         filtered_queryset = queryset.filter(
-            longitude=longitude, latitude=latitude,
-            category=category)
+            longitude=longitude, latitude=latitude)
 
+        return filtered_queryset
+
+
+class UserHistoryFilter(BaseFilterBackend):
+    def get_search_terms(self, request: Request, view) -> tuple:
+        user_id = request.query_params.get('user_id')
+        return user_id
+
+    def get_search_fields(self, view) -> int:
+        return getattr(view, 'search_fields')
+
+    def filter_queryset(self, request: Request, queryset: QuerySet, view):
+        user_id= self.get_search_terms(request, view)
+        if user_id is None:
+            raise ValidationError('Поля обязательные')
+        filtered_queryset = queryset.filter(
+            user=user_id)
         return filtered_queryset

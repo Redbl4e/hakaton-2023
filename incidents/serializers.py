@@ -43,3 +43,12 @@ class IncidentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Incident
         fields = ['latitude', 'longitude', 'address', 'category']
+
+
+class UsersIncidentSerializer(serializers.ModelSerializer):
+    incident = IncidentSerializer()
+
+    class Meta:
+        model = PostIncident
+        fields = ('id', 'title', 'photo', 'created_at', "user",
+                  'incident')
