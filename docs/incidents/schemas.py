@@ -30,3 +30,4 @@ detail_incident_schema = OpenAPISchema(
         'created_at': datetime_schema
     })
 
+

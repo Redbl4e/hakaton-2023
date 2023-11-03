@@ -98,8 +98,8 @@ SWAGGER_SETTINGS = {
 FIREBASE_APP = initialize_app()
 
 FCM_DJANGO_SETTINGS = {
-    "APP_VERBOSE_NAME": "My FCM Project",
-    "FCM_SERVER_KEY": "your_fcm_server_key_here",
+    "APP_VERBOSE_NAME": "CitizenRU",
+    "FCM_SERVER_KEY": "AAAAjDQKVTw:APA91bF4O2A74CLQKwBYe90w5MhTeaIkfC2XKAzRGe7nOnI0wyY9yWQNQ5fKAva_36uMa50q2JqNErzC0UNy6RCXmN3vAugsq8xgaBn7JoG3xZwfIVtYW0db9qu3Q8aliYgZv5SwZNEo",
 }
 
 ASGI_APPLICATION = "config.asgi.application"

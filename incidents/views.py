@@ -144,6 +144,7 @@ class HistoryIncidentAPIView(generics.ListAPIView):
         manual_parameters=[longitude_param, latitude_param,
                            category_param],
         responses={
+            status.HTTP_200_OK: incident_schema,
             status.HTTP_400_BAD_REQUEST: error_schema
         }
     )
